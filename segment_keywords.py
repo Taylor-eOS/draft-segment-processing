@@ -1,14 +1,13 @@
-import math
 import re
+import math
 import unicodedata
 from collections import Counter
 
 INPUT_FILE = "input.txt"
 OUTPUT_FILE = "segment_keywords_output.txt"
-MIN_WORD_LENGTH = 6
-TOP_N_WORDS_PER_SEGMENT = 12
+MIN_WORD_LENGTH = 5
+TOP_N_WORDS_PER_SEGMENT = 10
 MIN_LOG_LIKELIHOOD = 6.63
-
 
 def read_segments(file_path):
     with open(file_path, "r", encoding="utf-8") as file_handle:
@@ -22,12 +21,10 @@ def read_segments(file_path):
             segments.append(stripped_segment)
     return segments
 
-
 def normalize_word(word):
     decomposed = unicodedata.normalize("NFKD", word)
     ascii_word = "".join(character for character in decomposed if not unicodedata.combining(character))
     return ascii_word.lower()
-
 
 def tokenize_segment(segment_text):
     raw_tokens = re.findall(r"[A-Za-z][A-Za-z'\-]*[A-Za-z]|[A-Za-z]", segment_text)
@@ -39,7 +36,6 @@ def tokenize_segment(segment_text):
             cleaned_tokens.append(normalized_token)
     return cleaned_tokens
 
-
 def build_segment_word_counts(segments):
     segment_word_counts = []
     for segment_text in segments:
@@ -48,13 +44,11 @@ def build_segment_word_counts(segments):
         segment_word_counts.append(word_counts)
     return segment_word_counts
 
-
 def build_vocabulary(segment_word_counts):
     vocabulary = set()
     for word_counts in segment_word_counts:
         vocabulary.update(word_counts.keys())
     return vocabulary
-
 
 def build_total_counts_per_word(segment_word_counts, vocabulary):
     total_counts = {word: 0 for word in vocabulary}
@@ -62,7 +56,6 @@ def build_total_counts_per_word(segment_word_counts, vocabulary):
         for word, count in word_counts.items():
             total_counts[word] += count
     return total_counts
-
 
 def log_likelihood_ratio(count_in_segment, total_in_segment, count_in_corpus, total_in_corpus):
     if count_in_segment == 0:
@@ -80,7 +73,6 @@ def log_likelihood_ratio(count_in_segment, total_in_segment, count_in_corpus, to
         statistic = -statistic
     return statistic
 
-
 def compute_keyness_scores(segment_word_counts, total_counts, total_words_in_corpus):
     all_scores = []
     for word_counts in segment_word_counts:
@@ -94,11 +86,9 @@ def compute_keyness_scores(segment_word_counts, total_counts, total_words_in_cor
         all_scores.append(scores_for_segment)
     return all_scores
 
-
 def rank_top_words(score_dictionary, top_n):
     ranked_items = sorted(score_dictionary.items(), key=lambda item: item[1], reverse=True)
     return [word for word, score in ranked_items[:top_n]]
-
 
 def write_report(segments, keyness_scores, output_path):
     with open(output_path, "w", encoding="utf-8") as output_handle:
@@ -107,7 +97,6 @@ def write_report(segments, keyness_scores, output_path):
             top_words = rank_top_words(keyness_scores[segment_index], TOP_N_WORDS_PER_SEGMENT)
             word_list_text = ", ".join(top_words) if top_words else "(none found)"
             output_handle.write(f"Segment {segment_index + 1}: {word_list_text}\n")
-
 
 def main():
     segments = read_segments(INPUT_FILE)
@@ -122,7 +111,6 @@ def main():
     keyness_scores = compute_keyness_scores(segment_word_counts, total_counts, total_words_in_corpus)
     write_report(segments, keyness_scores, OUTPUT_FILE)
     print(f"Processed {total_segments} segments. Report written to {OUTPUT_FILE}")
-
 
 if __name__ == "__main__":
     main()
